@@ -1,0 +1,88 @@
+from datetime import datetime
+
+from pydantic import BaseModel, model_validator
+
+
+class OrderCreate(BaseModel):
+    variant_id: int | None = None
+    quantity: int = 1
+    product_id: int | None = None
+    user_config: dict | None = None
+
+    @model_validator(mode="after")
+    def check_flow(self):
+        if self.variant_id and self.product_id:
+            raise ValueError("Provide variant_id OR (product_id + user_config), not both")
+        if not self.variant_id and not self.product_id:
+            raise ValueError("Provide variant_id or (product_id + user_config)")
+        if self.product_id and not self.user_config:
+            raise ValueError("user_config is required when using product_id")
+        return self
+
+
+class ManualDeliverRequest(BaseModel):
+    data: str
+
+
+class OrderResponse(BaseModel):
+    id: int
+    buyer_id: int
+    seller_id: int
+    variant_id: int | None = None
+    product_id: int | None = None
+    quantity: int
+    total_amount: int
+    status: str
+    escrow_expires_at: datetime | None
+    delivered_data: str | None
+    created_at: datetime
+    product_title: str | None = None
+    variant_name: str | None = None
+    buyer_email: str | None = None
+    seller_email: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class TimelineEvent(BaseModel):
+    event: str
+    timestamp: datetime
+
+
+class ResourceInfo(BaseModel):
+    id: int
+    status: str
+    expires_at: datetime | None
+
+    model_config = {"from_attributes": True}
+
+
+class DisputeInfo(BaseModel):
+    id: int
+    reason: str
+    status: str
+    admin_note: str | None
+    created_at: datetime
+    resolved_at: datetime | None
+
+    model_config = {"from_attributes": True}
+
+
+class AdminOrderDetailResponse(OrderResponse):
+    resources: list[ResourceInfo] = []
+    dispute: DisputeInfo | None = None
+    timeline: list[TimelineEvent] = []
+
+
+class PaginatedOrderResponse(BaseModel):
+    items: list[OrderResponse]
+    total: int
+    page: int
+    per_page: int
+
+
+class OrderStatsResponse(BaseModel):
+    total: int
+    active: int
+    disputed: int
+    total_spend: int

@@ -1,0 +1,15 @@
+// Admin-specific component exports
+export { StatusBadge, OrderStatusBadge, DisputeStatusBadge, ProductStatusBadge, ResourceStatusBadge, AlertSeverityBadge } from "./status-badge";
+export type { StatusBadgeProps } from "./status-badge";
+
+export { StatsCard } from "./stats-card";
+
+export { FilterPills } from "./filter-pills";
+
+export { SlidePanel } from "./slide-panel";
+
+export { ConfirmModal } from "./confirm-modal";
+
+export { SearchInput } from "./search-input";
+
+export { Pagination } from "./pagination";

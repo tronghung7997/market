@@ -1,0 +1,16 @@
+services:
+  marketplace-svc:
+    volumes:
+      - ./marketplace-svc/src:/app/src
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      target: deps
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+    environment:
+      API_URL: http://marketplace-svc:8000

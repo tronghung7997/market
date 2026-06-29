@@ -1,0 +1,144 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import type { Category } from "@/lib/types";
+import { Button, Card, Field, Input, Select, Spinner, Textarea } from "@/components/ui";
+
+const SERVICE_TYPES = [
+  { value: "account", label: "Tài khoản" },
+  { value: "proxy", label: "Proxy" },
+  { value: "token", label: "Token" },
+  { value: "endpoint", label: "Endpoint" },
+  { value: "cloud", label: "Cloud" },
+  { value: "payment", label: "Thanh toán" },
+  { value: "takedown", label: "Takedown" },
+  { value: "other", label: "Khác" },
+];
+
+function flatten(cats: Category[]): Category[] {
+  const out: Category[] = [];
+  const walk = (l: Category[]) => l.forEach((c) => { out.push(c); walk(c.children ?? []); });
+  walk(cats);
+  return out;
+}
+
+export default function NewProduct() {
+  const router = useRouter();
+  const [cats, setCats] = useState<Category[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [title, setTitle] = useState("");
+  const [categoryId, setCategoryId] = useState<number>(0);
+  const [serviceType, setServiceType] = useState("account");
+  const [description, setDescription] = useState("");
+  const [highlightText, setHighlightText] = useState("");
+  const [escrowDays, setEscrowDays] = useState(3);
+  const [features, setFeatures] = useState("");
+  const [warrantyText, setWarrantyText] = useState("");
+  const [specs, setSpecs] = useState("");
+
+  useEffect(() => {
+    api.categories().then((c) => {
+      setCats(c);
+      const flat = flatten(c);
+      if (flat.length > 0) setCategoryId(flat[0].id);
+    });
+  }, []);
+
+  const submit = async () => {
+    if (!title.trim() || !categoryId) return;
+    setSaving(true); setError(null);
+    try {
+      const featureList = features.split("\n").map((f) => f.trim()).filter(Boolean);
+      let specsObj: Record<string, string> | undefined;
+      if (specs.trim()) {
+        specsObj = {};
+        for (const line of specs.split("\n")) {
+          const idx = line.indexOf(":");
+          if (idx > 0) specsObj[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+        }
+      }
+      const product = await api.createProduct({
+        title: title.trim(),
+        category_id: categoryId,
+        service_type: serviceType,
+        description: description.trim() || null,
+        highlight_text: highlightText.trim() || null,
+        escrow_days: escrowDays,
+        features: featureList.length > 0 ? featureList : null,
+        warranty_text: warrantyText.trim() || null,
+        specs: specsObj ?? null,
+        status: "active",
+      });
+      router.push(`/seller/products/${product.id}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể tạo sản phẩm");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const flatCats = flatten(cats);
+
+  return (
+    <div className="max-w-2xl">
+      <h2 className="text-[16px] font-semibold mb-5">Tạo sản phẩm mới</h2>
+
+      <Card className="p-6 space-y-5">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="Tên sản phẩm *">
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="VD: Twitter cổ 2020+ — Trust cao" />
+          </Field>
+          <Field label="Danh mục *">
+            <Select value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))}>
+              {flatCats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </Select>
+          </Field>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="Loại dịch vụ">
+            <Select value={serviceType} onChange={(e) => setServiceType(e.target.value)}>
+              {SERVICE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </Select>
+          </Field>
+          <Field label="Thời gian ký quỹ (ngày)">
+            <Input type="number" min={1} value={escrowDays} onChange={(e) => setEscrowDays(Number(e.target.value) || 3)} />
+          </Field>
+        </div>
+
+        <Field label="Dòng nổi bật" hint="Hiển thị trên ảnh sản phẩm">
+          <Input value={highlightText} onChange={(e) => setHighlightText(e.target.value)} placeholder="VD: IP sạch — Giống người thật" />
+        </Field>
+
+        <Field label="Mô tả" hint="Mô tả chi tiết sản phẩm">
+          <Textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Mô tả sản phẩm..." />
+        </Field>
+
+        <Field label="Tính năng" hint="Mỗi dòng là một tính năng">
+          <Textarea rows={4} value={features} onChange={(e) => setFeatures(e.target.value)} placeholder="Tài khoản cổ từ 2020&#10;Đã xác minh email&#10;Trust score cao" />
+        </Field>
+
+        <Field label="Thông số kỹ thuật" hint="key: value, mỗi dòng một thông số">
+          <Textarea rows={4} value={specs} onChange={(e) => setSpecs(e.target.value)} placeholder="format: ID | PASS | MAIL&#10;platform: Twitter / X&#10;country: US, UK, VN" />
+        </Field>
+
+        <Field label="Chính sách bảo hành">
+          <Textarea rows={3} value={warrantyText} onChange={(e) => setWarrantyText(e.target.value)} placeholder="Bảo hành 24h nếu tài khoản lỗi..." />
+        </Field>
+
+        {error && <p className="text-bad text-[13px]">{error}</p>}
+
+        <div className="flex items-center gap-3 pt-2">
+          <Button size="lg" disabled={!title.trim() || !categoryId || saving} onClick={submit}>
+            {saving ? "Đang tạo…" : "Tạo sản phẩm"}
+          </Button>
+          <Button variant="secondary" size="lg" onClick={() => router.push("/seller/products")}>Huỷ</Button>
+        </div>
+      </Card>
+    </div>
+  );
+}

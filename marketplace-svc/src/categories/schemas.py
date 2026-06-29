@@ -1,0 +1,33 @@
+from pydantic import BaseModel
+
+
+class CategoryCreate(BaseModel):
+    name: str
+    slug: str
+    icon: str | None = None
+    parent_id: int | None = None
+    sort_order: int = 0
+
+
+class CategoryUpdate(BaseModel):
+    name: str | None = None
+    slug: str | None = None
+    icon: str | None = None
+    sort_order: int | None = None
+    is_active: bool | None = None
+
+
+class CategoryResponse(BaseModel):
+    id: int
+    name: str
+    slug: str
+    icon: str | None
+    parent_id: int | None
+    sort_order: int
+    is_active: bool
+
+    model_config = {"from_attributes": True}
+
+
+class CategoryTreeResponse(CategoryResponse):
+    children: list["CategoryTreeResponse"] = []

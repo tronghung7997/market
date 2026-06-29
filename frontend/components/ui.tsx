@@ -1,0 +1,155 @@
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes, SelectHTMLAttributes } from "react";
+import { cn } from "@/lib/cn";
+
+/* ----------------------------------------------------------------
+   Refined primitives — hairline borders, restrained motion.
+   Each component is the single source of truth for its look.
+   ---------------------------------------------------------------- */
+
+const BTN_VARIANTS = {
+  primary: "bg-iris text-white hover:brightness-110",
+  secondary: "bg-raised text-fg border border-line-2 hover:border-faint",
+  ghost: "text-muted hover:text-fg hover:bg-surface",
+  danger: "bg-bad/90 text-white hover:bg-bad",
+} as const;
+const BTN_SIZES = {
+  sm: "h-8 px-3 text-[13px] gap-1.5",
+  md: "h-9 px-4 text-[13px] gap-2",
+  lg: "h-11 px-5 text-sm gap-2",
+} as const;
+
+export function Button({
+  variant = "primary", size = "md", block, className, children, ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: keyof typeof BTN_VARIANTS; size?: keyof typeof BTN_SIZES; block?: boolean;
+}) {
+  return (
+    <button
+      className={cn(
+        "inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-150 cursor-pointer",
+        "disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap",
+        BTN_VARIANTS[variant], BTN_SIZES[size], block && "w-full", className,
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function Card({
+  className, interactive, children, ...props
+}: { className?: string; interactive?: boolean; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        "bg-card border border-line rounded-card shadow-card",
+        interactive && "transition-all duration-150 hover:shadow-card-lg hover:border-line-2 hover:-translate-y-0.5",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+const TAG_TONES = {
+  neutral: "bg-surface text-muted border-line-2",
+  good: "bg-good-soft text-good border-good/25",
+  bad: "bg-bad-soft text-bad border-bad/25",
+  warn: "bg-warn-soft text-warn border-warn/25",
+  iris: "bg-iris-soft text-iris-hi border-iris/25",
+} as const;
+
+export function Tag({
+  tone = "neutral", className, children,
+}: { tone?: keyof typeof TAG_TONES; className?: string; children: ReactNode }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium leading-none",
+        TAG_TONES[tone], className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="text-[13px] font-medium text-muted">{label}</span>
+      {children}
+      {hint && <span className="text-[12px] text-faint">{hint}</span>}
+    </label>
+  );
+}
+
+export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      className={cn(
+        "h-10 w-full rounded-lg bg-surface border border-line px-3 text-sm text-fg",
+        "placeholder:text-faint transition-colors focus:border-iris focus:bg-panel",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      className={cn(
+        "w-full rounded-lg bg-surface border border-line px-3 py-2.5 text-sm text-fg",
+        "placeholder:text-faint transition-colors focus:border-iris focus:bg-panel resize-y min-h-[80px]",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function Select({ className, children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      className={cn(
+        "h-10 w-full rounded-lg bg-surface border border-line px-3 text-sm text-fg",
+        "transition-colors focus:border-iris focus:bg-panel appearance-none",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </select>
+  );
+}
+
+export function Tooltip({ text, children, className, position = "top" }: { text: string; children: ReactNode; className?: string; position?: "top" | "bottom" }) {
+  const pos = position === "top"
+    ? "bottom-full mb-1.5 left-0"
+    : "top-full mt-1.5 left-0";
+  return (
+    <span className={cn("group relative inline-flex max-w-full", className)}>
+      {children}
+      <span className={cn(
+        "pointer-events-none absolute px-2.5 py-1.5 rounded-md bg-fg text-surface text-[11px] leading-snug whitespace-pre-wrap max-w-[300px] w-max opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-150 z-50 shadow-card-lg",
+        pos,
+      )}>
+        {text}
+      </span>
+    </span>
+  );
+}
+
+export function Spinner({ label }: { label?: string }) {
+  return (
+    <div className="flex items-center justify-center gap-2.5 py-14 text-muted">
+      <span className="h-3.5 w-3.5 rounded-full border-2 border-line-2 border-t-iris animate-spin" />
+      <span className="text-[13px]">{label ?? "Đang tải…"}</span>
+    </div>
+  );
+}
