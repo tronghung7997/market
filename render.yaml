@@ -14,7 +14,7 @@ services:
     name: marketplace-svc
     env: docker
     dockerfilePath: ./marketplace-svc/Dockerfile
-    dockerContext: ./marketplace-svc
+    dockerContext: .
     plan: free
     healthCheckPath: /health
     envVars:
