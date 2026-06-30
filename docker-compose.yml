@@ -22,9 +22,7 @@ services:
       - "6379:6379"
 
   marketplace-svc:
-    build:
-      context: .
-      dockerfile: ./marketplace-svc/Dockerfile
+    build: ./marketplace-svc
     ports:
       - "8001:8000"
     environment:

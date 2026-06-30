@@ -4,14 +4,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends postgresql-clie
 
 WORKDIR /app
 
-COPY marketplace-svc/pyproject.toml .
+COPY pyproject.toml .
 RUN pip install --no-cache-dir -e .
 
-COPY marketplace-svc/alembic.ini .
-COPY marketplace-svc/alembic/ ./alembic/
-COPY marketplace-svc/src/ ./src/
-COPY marketplace-svc/start.sh .
-COPY db/marketplace-seed.sql ./seed.sql
+COPY alembic.ini .
+COPY alembic/ ./alembic/
+COPY src/ ./src/
+COPY start.sh .
+COPY seed.sql ./seed.sql
 RUN chmod +x start.sh
 
 CMD ["./start.sh"]
